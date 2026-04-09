@@ -35,7 +35,7 @@ app.get('/hackathon/api/posts', (req, res) => {
 
 // POST new entry
 app.post('/hackathon/api/posts', (req, res) => {
-  const { password, organization, name, website } = req.body;
+  const { password, organization, name, website, description } = req.body;
 
   if (password !== '044-202-7748!') {
     return res.status(403).json({ error: '비밀번호가 올바르지 않습니다.' });
@@ -44,6 +44,8 @@ app.post('/hackathon/api/posts', (req, res) => {
   if (!organization || !name || !website) {
     return res.status(400).json({ error: '소속, 성명, 웹사이트 주소를 모두 입력해주세요.' });
   }
+
+  const desc = (description || '').trim().slice(0, 500);
 
   // Ensure website has protocol
   let url = website.trim();
@@ -57,6 +59,7 @@ app.post('/hackathon/api/posts', (req, res) => {
     organization: organization.trim(),
     name: name.trim(),
     website: url,
+    description: desc,
     likes: 0,
     dislikes: 0,
     createdAt: new Date().toISOString()
