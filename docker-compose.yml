@@ -1,0 +1,9 @@
+services:
+  hackathon:
+    build: .
+    container_name: hackathon-board
+    restart: unless-stopped
+    ports:
+      - "3001:3001"
+    volumes:
+      - ./data:/app/data

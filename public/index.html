@@ -1,0 +1,332 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>해커톤 게시판</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: linear-gradient(135deg, #0f0c29, #302b63, #24243e);
+      min-height: 100vh;
+      color: #e0e0e0;
+    }
+    .container {
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 30px 20px;
+    }
+    h1 {
+      text-align: center;
+      font-size: 2.2em;
+      margin-bottom: 10px;
+      background: linear-gradient(90deg, #00d2ff, #3a7bd5);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+    .subtitle {
+      text-align: center;
+      color: #888;
+      margin-bottom: 30px;
+      font-size: 0.95em;
+    }
+
+    /* Form */
+    .form-card {
+      background: rgba(255,255,255,0.05);
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 16px;
+      padding: 28px;
+      margin-bottom: 30px;
+      backdrop-filter: blur(10px);
+    }
+    .form-card h2 {
+      margin-bottom: 20px;
+      font-size: 1.3em;
+      color: #00d2ff;
+    }
+    .form-row {
+      display: flex;
+      gap: 12px;
+      margin-bottom: 12px;
+      flex-wrap: wrap;
+    }
+    .form-row input {
+      flex: 1;
+      min-width: 150px;
+      padding: 12px 16px;
+      border: 1px solid rgba(255,255,255,0.15);
+      border-radius: 10px;
+      background: rgba(255,255,255,0.07);
+      color: #fff;
+      font-size: 0.95em;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+    .form-row input:focus {
+      border-color: #00d2ff;
+    }
+    .form-row input::placeholder { color: #777; }
+    .btn-submit {
+      width: 100%;
+      padding: 14px;
+      border: none;
+      border-radius: 10px;
+      background: linear-gradient(90deg, #00d2ff, #3a7bd5);
+      color: #fff;
+      font-size: 1.05em;
+      font-weight: 600;
+      cursor: pointer;
+      transition: opacity 0.2s;
+    }
+    .btn-submit:hover { opacity: 0.85; }
+
+    /* Posts */
+    .posts-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 16px;
+    }
+    .posts-header h2 {
+      font-size: 1.3em;
+      color: #00d2ff;
+    }
+    .post-count {
+      color: #888;
+      font-size: 0.9em;
+    }
+    .post-card {
+      background: rgba(255,255,255,0.05);
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 14px;
+      padding: 22px;
+      margin-bottom: 14px;
+      backdrop-filter: blur(10px);
+      transition: transform 0.15s, border-color 0.15s;
+    }
+    .post-card:hover {
+      transform: translateY(-2px);
+      border-color: rgba(0,210,255,0.3);
+    }
+    .post-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 12px;
+    }
+    .post-info {
+      flex: 1;
+    }
+    .post-org {
+      font-size: 0.85em;
+      color: #3a7bd5;
+      font-weight: 600;
+      margin-bottom: 4px;
+    }
+    .post-name {
+      font-size: 1.15em;
+      font-weight: 700;
+      color: #fff;
+      margin-bottom: 6px;
+    }
+    .post-link a {
+      color: #00d2ff;
+      text-decoration: none;
+      font-size: 0.92em;
+      word-break: break-all;
+    }
+    .post-link a:hover { text-decoration: underline; }
+    .post-date {
+      font-size: 0.78em;
+      color: #666;
+      white-space: nowrap;
+    }
+    .post-actions {
+      display: flex;
+      gap: 10px;
+      margin-top: 14px;
+    }
+    .btn-like, .btn-dislike {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 8px 16px;
+      border: 1px solid rgba(255,255,255,0.12);
+      border-radius: 20px;
+      background: rgba(255,255,255,0.04);
+      color: #ccc;
+      cursor: pointer;
+      font-size: 0.9em;
+      transition: all 0.2s;
+    }
+    .btn-like:hover {
+      background: rgba(0, 200, 83, 0.15);
+      border-color: rgba(0, 200, 83, 0.4);
+      color: #00c853;
+    }
+    .btn-dislike:hover {
+      background: rgba(255, 82, 82, 0.15);
+      border-color: rgba(255, 82, 82, 0.4);
+      color: #ff5252;
+    }
+    .btn-like .emoji, .btn-dislike .emoji { font-size: 1.2em; }
+
+    .msg {
+      padding: 12px 16px;
+      border-radius: 10px;
+      margin-bottom: 16px;
+      font-size: 0.92em;
+      display: none;
+    }
+    .msg.success { display: block; background: rgba(0,200,83,0.15); color: #00c853; border: 1px solid rgba(0,200,83,0.3); }
+    .msg.error { display: block; background: rgba(255,82,82,0.15); color: #ff5252; border: 1px solid rgba(255,82,82,0.3); }
+
+    .empty {
+      text-align: center;
+      color: #666;
+      padding: 40px 0;
+      font-size: 1em;
+    }
+
+    @media (max-width: 600px) {
+      .form-row { flex-direction: column; }
+      .container { padding: 20px 12px; }
+      h1 { font-size: 1.6em; }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Hackathon Board</h1>
+    <p class="subtitle">해커톤 참가팀 등록 게시판</p>
+
+    <div id="message" class="msg"></div>
+
+    <div class="form-card">
+      <h2>팀 등록</h2>
+      <form id="postForm">
+        <div class="form-row">
+          <input type="password" id="password" placeholder="비밀번호" required>
+        </div>
+        <div class="form-row">
+          <input type="text" id="organization" placeholder="소속" required>
+          <input type="text" id="name" placeholder="성명" required>
+        </div>
+        <div class="form-row">
+          <input type="url" id="website" placeholder="웹사이트 주소 (예: https://example.com)" required>
+        </div>
+        <button type="submit" class="btn-submit">등록하기</button>
+      </form>
+    </div>
+
+    <div class="posts-header">
+      <h2>등록 목록</h2>
+      <span id="postCount" class="post-count"></span>
+    </div>
+    <div id="postsList"></div>
+  </div>
+
+  <script>
+    const API = '/hackathon/api/posts';
+
+    async function loadPosts() {
+      const res = await fetch(API);
+      const posts = await res.json();
+      const container = document.getElementById('postsList');
+      const countEl = document.getElementById('postCount');
+
+      countEl.textContent = `총 ${posts.length}건`;
+
+      if (posts.length === 0) {
+        container.innerHTML = '<div class="empty">아직 등록된 팀이 없습니다.</div>';
+        return;
+      }
+
+      container.innerHTML = posts.map(post => `
+        <div class="post-card" id="post-${post.id}">
+          <div class="post-top">
+            <div class="post-info">
+              <div class="post-org">${escapeHtml(post.organization)}</div>
+              <div class="post-name">${escapeHtml(post.name)}</div>
+              <div class="post-link">
+                <a href="${escapeHtml(post.website)}" target="_blank" rel="noopener">${escapeHtml(post.website)}</a>
+              </div>
+            </div>
+            <div class="post-date">${formatDate(post.createdAt)}</div>
+          </div>
+          <div class="post-actions">
+            <button class="btn-like" onclick="vote('${post.id}','like')">
+              <span class="emoji">👍</span>
+              <span id="likes-${post.id}">${post.likes}</span>
+            </button>
+            <button class="btn-dislike" onclick="vote('${post.id}','dislike')">
+              <span class="emoji">👎</span>
+              <span id="dislikes-${post.id}">${post.dislikes}</span>
+            </button>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    async function vote(id, type) {
+      const res = await fetch(`${API}/${id}/${type}`, { method: 'POST' });
+      const data = await res.json();
+      document.getElementById(`likes-${id}`).textContent = data.likes;
+      document.getElementById(`dislikes-${id}`).textContent = data.dislikes;
+    }
+
+    document.getElementById('postForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const msgEl = document.getElementById('message');
+
+      const body = {
+        password: document.getElementById('password').value,
+        organization: document.getElementById('organization').value,
+        name: document.getElementById('name').value,
+        website: document.getElementById('website').value,
+      };
+
+      try {
+        const res = await fetch(API, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(body),
+        });
+        const data = await res.json();
+
+        if (!res.ok) {
+          msgEl.className = 'msg error';
+          msgEl.textContent = data.error;
+        } else {
+          msgEl.className = 'msg success';
+          msgEl.textContent = '등록이 완료되었습니다!';
+          document.getElementById('organization').value = '';
+          document.getElementById('name').value = '';
+          document.getElementById('website').value = '';
+          loadPosts();
+        }
+      } catch (err) {
+        msgEl.className = 'msg error';
+        msgEl.textContent = '오류가 발생했습니다.';
+      }
+
+      setTimeout(() => { msgEl.className = 'msg'; }, 3000);
+    });
+
+    function escapeHtml(str) {
+      const div = document.createElement('div');
+      div.textContent = str;
+      return div.innerHTML;
+    }
+
+    function formatDate(iso) {
+      const d = new Date(iso);
+      return `${d.getFullYear()}.${String(d.getMonth()+1).padStart(2,'0')}.${String(d.getDate()).padStart(2,'0')} ${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`;
+    }
+
+    loadPosts();
+  </script>
+</body>
+</html>
