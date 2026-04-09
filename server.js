@@ -14,10 +14,22 @@ app.use('/hackathon', express.static(path.join(__dirname, 'public')));
 
 // Helper: read posts
 function readPosts() {
-  if (!fs.existsSync(DATA_FILE)) {
+  try {
+    if (!fs.existsSync(DATA_FILE)) {
+      fs.writeFileSync(DATA_FILE, JSON.stringify([], null, 2));
+      return [];
+    }
+    const data = fs.readFileSync(DATA_FILE, 'utf-8').trim();
+    if (!data) {
+      fs.writeFileSync(DATA_FILE, JSON.stringify([], null, 2));
+      return [];
+    }
+    const parsed = JSON.parse(data);
+    return Array.isArray(parsed) ? parsed : [];
+  } catch (e) {
     fs.writeFileSync(DATA_FILE, JSON.stringify([], null, 2));
+    return [];
   }
-  return JSON.parse(fs.readFileSync(DATA_FILE, 'utf-8'));
 }
 
 // Helper: write posts
