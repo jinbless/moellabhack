@@ -9,8 +9,16 @@ const DATA_FILE = path.join(__dirname, 'data', 'posts.json');
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// Serve static files
-app.use('/hackathon', express.static(path.join(__dirname, 'public')));
+// Serve static files with no-cache
+app.use('/hackathon', express.static(path.join(__dirname, 'public'), {
+  etag: false,
+  lastModified: false,
+  setHeaders: (res) => {
+    res.set('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
+    res.set('Pragma', 'no-cache');
+    res.set('Expires', '0');
+  }
+}));
 
 // Helper: read posts
 function readPosts() {
