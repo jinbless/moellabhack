@@ -197,6 +197,16 @@
       color: #ff5252;
     }
     .btn-like .emoji, .btn-dislike .emoji { font-size: 1.2em; }
+    .btn-like.active {
+      background: rgba(0, 200, 83, 0.25);
+      border-color: rgba(0, 200, 83, 0.6);
+      color: #00c853;
+    }
+    .btn-dislike.active {
+      background: rgba(255, 82, 82, 0.25);
+      border-color: rgba(255, 82, 82, 0.6);
+      color: #ff5252;
+    }
 
     .msg {
       padding: 12px 16px;
@@ -289,11 +299,11 @@
             <div class="post-date">${formatDate(post.createdAt)}</div>
           </div>
           <div class="post-actions">
-            <button class="btn-like" onclick="vote('${post.id}','like')">
+            <button class="btn-like ${getVote(post.id)==='like'?'active':''}" id="btn-like-${post.id}" onclick="vote('${post.id}','like')">
               <span class="emoji">👍</span>
               <span id="likes-${post.id}">${post.likes}</span>
             </button>
-            <button class="btn-dislike" onclick="vote('${post.id}','dislike')">
+            <button class="btn-dislike ${getVote(post.id)==='dislike'?'active':''}" id="btn-dislike-${post.id}" onclick="vote('${post.id}','dislike')">
               <span class="emoji">👎</span>
               <span id="dislikes-${post.id}">${post.dislikes}</span>
             </button>
@@ -302,11 +312,49 @@
       `).join('');
     }
 
+    function getVote(id) {
+      return localStorage.getItem(`vote_${id}`) || null;
+    }
+    function setVote(id, type) {
+      if (type) localStorage.setItem(`vote_${id}`, type);
+      else localStorage.removeItem(`vote_${id}`);
+    }
+
     async function vote(id, type) {
-      const res = await fetch(`${API}/${id}/${type}`, { method: 'POST' });
+      const current = getVote(id);
+      let action;
+      let newState;
+
+      if (current === type) {
+        // 같은 버튼 다시 누르면 취소
+        action = `cancel-${type}`;
+        newState = null;
+      } else if (current && current !== type) {
+        // 반대 버튼 누르면 전환
+        action = `switch-to-${type}`;
+        newState = type;
+      } else {
+        // 처음 누르기
+        action = type;
+        newState = type;
+      }
+
+      const res = await fetch(`${API}/${id}/vote`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action }),
+      });
       const data = await res.json();
+      if (data.error) return;
+
+      setVote(id, newState);
       document.getElementById(`likes-${id}`).textContent = data.likes;
       document.getElementById(`dislikes-${id}`).textContent = data.dislikes;
+
+      const likeBtn = document.getElementById(`btn-like-${id}`);
+      const dislikeBtn = document.getElementById(`btn-dislike-${id}`);
+      likeBtn.classList.toggle('active', newState === 'like');
+      dislikeBtn.classList.toggle('active', newState === 'dislike');
     }
 
     document.getElementById('postForm').addEventListener('submit', async (e) => {

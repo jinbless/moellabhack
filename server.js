@@ -70,24 +70,38 @@ app.post('/hackathon/api/posts', (req, res) => {
   res.status(201).json(post);
 });
 
-// POST like
-app.post('/hackathon/api/posts/:id/like', (req, res) => {
+// POST vote (action: like, dislike, cancel-like, cancel-dislike, switch-to-like, switch-to-dislike)
+app.post('/hackathon/api/posts/:id/vote', (req, res) => {
+  const { action } = req.body;
   const posts = readPosts();
   const post = posts.find(p => p.id === req.params.id);
   if (!post) return res.status(404).json({ error: '게시글을 찾을 수 없습니다.' });
 
-  post.likes += 1;
-  writePosts(posts);
-  res.json({ likes: post.likes, dislikes: post.dislikes });
-});
+  switch (action) {
+    case 'like':
+      post.likes += 1;
+      break;
+    case 'dislike':
+      post.dislikes += 1;
+      break;
+    case 'cancel-like':
+      post.likes = Math.max(0, post.likes - 1);
+      break;
+    case 'cancel-dislike':
+      post.dislikes = Math.max(0, post.dislikes - 1);
+      break;
+    case 'switch-to-like':
+      post.dislikes = Math.max(0, post.dislikes - 1);
+      post.likes += 1;
+      break;
+    case 'switch-to-dislike':
+      post.likes = Math.max(0, post.likes - 1);
+      post.dislikes += 1;
+      break;
+    default:
+      return res.status(400).json({ error: '잘못된 요청입니다.' });
+  }
 
-// POST dislike
-app.post('/hackathon/api/posts/:id/dislike', (req, res) => {
-  const posts = readPosts();
-  const post = posts.find(p => p.id === req.params.id);
-  if (!post) return res.status(404).json({ error: '게시글을 찾을 수 없습니다.' });
-
-  post.dislikes += 1;
   writePosts(posts);
   res.json({ likes: post.likes, dislikes: post.dislikes });
 });
